@@ -1,5 +1,6 @@
 import * as React from "react";
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
   Table,
@@ -11,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Calendar, Users, Trophy, Building2, Link as LinkIcon, CheckCircle2, Clock } from "lucide-react";
+import { ExternalLink, Calendar, Users, Trophy, Building2, Link as LinkIcon, CheckCircle2, Clock, Wallet, Layers, Zap, ArrowRightCircle, ChevronDown } from "lucide-react";
 import { api } from "@/services/api";
 
 // --- TYPE DEFINITIONS ---
@@ -26,12 +27,16 @@ export interface Hackathon {
   platform?: string;
   link?: string;
   status?: string;
+  
+  duration?: string;
+  fees?: string;
+  hackathon_type?: string;
+  is_direct_to_final?: boolean;
+
   registration_deadline?: string | null;
   round_1_date?: string | null;
   result_date?: string | null;
-  final_submission_date?: string | null;
-  top_teams_date?: string | null;
-  grand_finale_date?: string | null;
+  final_round_date?: string | null;
   mode?: string;
   team_size?: string;
   prize_pool?: string | null;
@@ -56,27 +61,71 @@ const statusVariants: Record<string, any> = {
   "Ended": "onHold",
 };
 
+// --- STATUS PICKER DROPDOWN ---
+const StatusPicker = ({ current, onSelect }: { current: string, onSelect: (status: string) => void }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const click = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false); };
+    document.addEventListener("mousedown", click);
+    return () => document.removeEventListener("mousedown", click);
+  }, []);
+
+  return (
+    <div className="relative inline-block" ref={ref}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-1.5 transition-transform active:scale-95 px-3 py-0.5 rounded-full border border-white/10 glass-panel bg-white/5 hover:bg-white/10 group/btn shadow-[0_2px_10px_rgba(0,0,0,0.2)]"
+      >
+        <Badge variant={statusVariants[current] || "default"} className="bg-transparent border-none p-0 shadow-none text-[10px] uppercase truncate max-w-[80px]">
+          {current}
+        </Badge>
+        <ChevronDown className={cn("h-3 w-3 text-muted/50 group-hover/btn:text-white transition-all", isOpen && "rotate-180")} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+            className="absolute z-50 mt-2 left-1/2 -translate-x-1/2 w-32 glass-panel shadow-2xl overflow-hidden py-1 border-white/5"
+          >
+            {statusOrder.map((s) => (
+              <div
+                key={s}
+                onClick={() => { onSelect(s); setIsOpen(false); }}
+                className={cn(
+                  "px-3 py-1.5 text-[10px] uppercase font-bold cursor-pointer transition-colors",
+                  current === s ? "bg-primary text-white" : "text-white/70 hover:bg-white/10 hover:text-white"
+                )}
+              >
+                {s}
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 // --- MAIN COMPONENT ---
 export const HackathonDataTable = ({ 
   hackathons, 
-  visibleColumns,
   onEdit,
   onDelete,
   onRefresh
 }: HackathonDataTableProps) => {
   
-  const handleStatusToggle = async (h: Hackathon) => {
-    if (!h.id || !h.status) return;
-    
-    const currentIndex = statusOrder.indexOf(h.status);
-    const nextIndex = (currentIndex + 1) % statusOrder.length;
-    const nextStatus = statusOrder[nextIndex];
-
+  const handleStatusChange = async (h: Hackathon, nextStatus: string) => {
+    if (!h.id) return;
     try {
       await api.saveHackathon({ status: nextStatus }, h.id);
       onRefresh();
     } catch (err) {
-      console.error("Failed to toggle status");
+      console.error("Failed to update status");
     }
   };
 
@@ -97,15 +146,16 @@ export const HackathonDataTable = ({
     <div className="glass-panel overflow-hidden">
       <div className="relative w-full overflow-auto">
         <Table>
-          <TableHeader className="bg-white/5">
-            <TableRow>
-              <TableHead className="text-muted font-semibold uppercase text-[10px] tracking-wider py-4 border-none">Hackathon</TableHead>
-              <TableHead className="text-muted font-semibold uppercase text-[10px] tracking-wider py-4 border-none">Direct Link</TableHead>
-              <TableHead className="text-muted font-semibold uppercase text-[10px] tracking-wider py-4 border-none">Milestones</TableHead>
-              <TableHead className="text-muted font-semibold uppercase text-[10px] tracking-wider py-4 border-none">Prize Pool</TableHead>
-              <TableHead className="text-muted font-semibold uppercase text-[10px] tracking-wider py-4 border-none text-center">Status</TableHead>
-              <TableHead className="text-muted font-semibold uppercase text-[10px] tracking-wider py-4 border-none">Team</TableHead>
-              <TableHead className="text-right py-4 border-none">Actions</TableHead>
+          <TableHeader className="bg-white/5 border-none">
+            <TableRow className="border-none">
+              <TableHead className="text-muted font-black uppercase text-[10px] tracking-widest py-5 border-none">Hackathon</TableHead>
+              <TableHead className="text-muted font-black uppercase text-[10px] tracking-widest py-5 border-none">Duration</TableHead>
+              <TableHead className="text-muted font-black uppercase text-[10px] tracking-widest py-5 border-none">Type</TableHead>
+              <TableHead className="text-muted font-black uppercase text-[10px] tracking-widest py-5 border-none">Fees</TableHead>
+              <TableHead className="text-muted font-black uppercase text-[10px] tracking-widest py-5 border-none">Timeline</TableHead>
+              <TableHead className="text-muted font-black uppercase text-[10px] tracking-widest py-5 border-none text-center">Flow</TableHead>
+              <TableHead className="text-muted font-black uppercase text-[10px] tracking-widest py-5 border-none text-center">Status</TableHead>
+              <TableHead className="text-right py-5 border-none pr-6">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -113,101 +163,99 @@ export const HackathonDataTable = ({
               hackathons.map((h, index) => (
                 <motion.tr
                   key={h.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="border-b border-white/5 hover:bg-white/5 transition-colors group"
+                  className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group"
                 >
-                  {/* TITLE & ORG */}
                   <TableCell className="py-4 border-none">
                     <div className="flex flex-col">
-                      <span className="font-bold text-white text-md group-hover:text-primary transition-colors">{h.title}</span>
-                      <span className="text-[10px] text-muted flex items-center gap-1">
-                        {h.organization || h.platform || "Independent"}
+                      <div className="flex items-center gap-2">
+                         <span className="font-bold text-white text-md group-hover:text-primary transition-colors">{h.title}</span>
+                         {h.link && (
+                            <a href={h.link} target="_blank" rel="noreferrer" className="text-muted hover:text-white transition-colors">
+                               <LinkIcon className="h-3 w-3" />
+                            </a>
+                         )}
+                      </div>
+                      <div className="flex flex-col gap-0.5 mt-0.5">
+                        <span className="text-[10px] text-muted flex items-center gap-1 font-medium">
+                          <Building2 className="h-2.5 w-2.5" /> {h.organization || h.platform || "Independent"}
+                        </span>
+                        <span className="text-[10px] text-accent/80 font-bold uppercase tracking-tight flex items-center gap-1">
+                          <Trophy className="h-2.5 w-2.5" /> {h.prize_pool || "Recognition"} • {h.team_size || "1-4"}
+                        </span>
+                      </div>
+                    </div>
+                  </TableCell>
+                  
+                  <TableCell className="py-4 border-none">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-white/90">
+                      <Zap className="h-3 w-3 text-yellow-500" />
+                      <span>{h.duration ? `${h.duration}H` : "N/A"}</span>
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="py-4 border-none">
+                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 uppercase font-black border-white/10 bg-white/5 text-secondary">
+                      {h.hackathon_type || "Mixed"}
+                    </Badge>
+                  </TableCell>
+
+                  <TableCell className="py-4 border-none">
+                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-tighter">
+                      <Wallet className={cn("h-3 w-3", h.fees?.toLowerCase().includes("free") ? "text-green-400" : "text-primary")} />
+                      <span className={cn(h.fees?.toLowerCase().includes("free") ? "text-green-400" : "text-white/80")}>
+                        {h.fees || "FREE"}
                       </span>
                     </div>
                   </TableCell>
-                  
-                  {/* LINK CHIP */}
-                  <TableCell className="py-4 border-none">
-                    {h.link ? (
-                      <a 
-                        href={h.link} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md transition-all border border-primary/20"
-                      >
-                        <LinkIcon className="h-2.5 w-2.5" />
-                        Explore Site
-                      </a>
+
+                  <TableCell className="py-4 border-none min-w-[180px]">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[9px]">
+                      <div className="flex items-center gap-1.5 text-muted">
+                        <Clock className="h-2.5 w-2.5" />
+                        <span className="font-bold">REG:</span> {formatDate(h.registration_deadline)}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-primary">
+                        <Calendar className="h-2.5 w-2.5" />
+                        <span className="font-bold">R1:</span> {formatDate(h.round_1_date)}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-secondary">
+                        <CheckCircle2 className="h-2.5 w-2.5" />
+                        <span className="font-bold">RES:</span> {formatDate(h.result_date)}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-accent font-black">
+                        <Trophy className="h-2.5 w-2.5" />
+                        <span className="font-bold">FINAL:</span> {formatDate(h.final_round_date)}
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="py-4 border-none text-center">
+                    {h.is_direct_to_final ? (
+                       <div className="flex flex-col items-center gap-0.5 text-primary animate-pulse" title="Direct to Final">
+                          <Zap className="h-4 w-4" />
+                          <span className="text-[8px] font-black uppercase tracking-tighter">Direct</span>
+                       </div>
                     ) : (
-                      <span className="text-muted text-[10px] italic">No link</span>
+                       <div className="flex flex-col items-center gap-0.5 text-muted/30">
+                          <ArrowRightCircle className="h-4 w-4" />
+                          <span className="text-[8px] font-bold uppercase tracking-tighter">Mixed</span>
+                       </div>
                     )}
                   </TableCell>
 
-                  {/* MILESTONE GRID */}
-                  <TableCell className="py-4 border-none min-w-[200px]">
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
-                      <div className="flex items-center gap-1.5 text-secondary">
-                        <Clock className="h-3 w-3" />
-                        <span className="uppercase font-bold opacity-70">Reg:</span> {formatDate(h.registration_deadline)}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-primary">
-                        <Calendar className="h-3 w-3" />
-                        <span className="uppercase font-bold opacity-70">R1:</span> {formatDate(h.round_1_date)}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-accent">
-                        <Trophy className="h-3 w-3" />
-                        <span className="uppercase font-bold opacity-70">Finale:</span> {formatDate(h.grand_finale_date)}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-muted">
-                        <CheckCircle2 className="h-3 w-3" />
-                        <span className="uppercase font-bold opacity-70">Results:</span> {formatDate(h.result_date)}
-                      </div>
-                    </div>
-                  </TableCell>
-
-                  {/* PRIZE */}
-                  <TableCell className="py-4 border-none">
-                    <div className="flex items-center gap-2 text-sm text-green-400 font-medium">
-                      <Trophy className="h-3 w-3" />
-                      <span>{h.prize_pool || "Good Luck!"}</span>
-                    </div>
-                  </TableCell>
-                  
-                  {/* STATUS (INTERACTIVE) */}
                   <TableCell className="py-4 border-none text-center">
-                    <button 
-                      onClick={() => handleStatusToggle(h)}
-                      className="transition-transform active:scale-95 cursor-pointer"
-                      title="Click to toggle status"
-                    >
-                      <Badge variant={statusVariants[h.status || "Upcoming"] || "default"} className="px-3 py-0.5 text-[10px] uppercase tracking-tighter whitespace-nowrap">
-                        {h.status || "Upcoming"}
-                      </Badge>
-                    </button>
+                    <StatusPicker current={h.status || "Upcoming"} onSelect={(s) => handleStatusChange(h, s)} />
                   </TableCell>
 
-                  {/* TEAM */}
-                  <TableCell className="py-4 border-none">
-                       <div className="flex -space-x-2">
-                        {teamMembers.map((member, idx) => (
-                          <Avatar key={idx} className="h-7 w-7 border-2 border-[#020617] ring-1 ring-white/10 shrink-0">
-                            <AvatarFallback className="text-[8px] font-bold bg-surface text-primary">
-                              {member.fallback}
-                            </AvatarFallback>
-                          </Avatar>
-                        ))}
-                      </div>
-                  </TableCell>
-
-                  {/* ACTIONS */}
-                  <TableCell className="py-4 text-right border-none">
-                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => onEdit(h)} className="text-[10px] uppercase font-bold text-secondary hover:text-white underline-offset-4 hover:underline">Edit</button>
+                  <TableCell className="py-4 text-right border-none pr-6">
+                    <div className="flex justify-end gap-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => onEdit(h)} className="text-[10px] uppercase font-black text-secondary hover:text-white transition-colors">Edit</button>
                       <button 
                         onClick={() => h.id && onDelete(h.id)} 
-                        className="text-[10px] uppercase font-bold text-accent hover:text-white underline-offset-4 hover:underline"
+                        className="text-[10px] uppercase font-black text-accent hover:text-white transition-colors"
                       >
                         Delete
                       </button>
@@ -217,8 +265,8 @@ export const HackathonDataTable = ({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="h-32 text-center text-muted italic border-none">
-                   No hackathons tracking yet. Use Magic Paste to start!
+                <TableCell colSpan={8} className="h-32 text-center text-muted italic border-none">
+                   No hackathons tracking yet.
                 </TableCell>
               </TableRow>
             )}

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, JSON
+from sqlalchemy import Column, Integer, String, DateTime, JSON, Boolean
 from database import Base
 import datetime
 
@@ -6,36 +6,37 @@ class Hackathon(Base):
     __tablename__ = "hackathons"
 
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, index=True) # The ONLY required field
+    title = Column(String, index=True) 
     platform = Column(String, nullable=True)
     link = Column(String, nullable=True)
     
     # Status: Upcoming, Live, Ended, Submitted, Selected, Rejected
     status = Column(String, default="Upcoming")
     
-    # Milestone Dates (Centric to the new vision)
+    # Logistics
+    duration = Column(String, nullable=True) # Now stored as numeric string e.g. "6"
+    fees = Column(String, nullable=True) 
+    hackathon_type = Column(String, nullable=True) 
+    is_direct_to_final = Column(Boolean, default=False)
+    
+    # Milestone Dates 
     registration_deadline = Column(DateTime, nullable=True)
     round_1_date = Column(DateTime, nullable=True)
-    result_date = Column(DateTime, nullable=True) # Round 1 Result
-    final_submission_date = Column(DateTime, nullable=True)
-    top_teams_date = Column(DateTime, nullable=True) # Finalist Announcement
+    result_date = Column(DateTime, nullable=True) 
+    final_round_date = Column(DateTime, nullable=True) # RENAMED from final_submission_date
+    top_teams_date = Column(DateTime, nullable=True)
     grand_finale_date = Column(DateTime, nullable=True)
     
-    # Legacy / Additional Info
-    submission_deadline = Column(DateTime, nullable=True) # General fallback
-    mode = Column(String, nullable=True) # Online, Offline, Hybrid
+    # Details & Storage
+    submission_deadline = Column(DateTime, nullable=True) 
+    mode = Column(String, nullable=True) 
     team_size = Column(String, nullable=True)
-    fee = Column(String, nullable=True)
     prize_pool = Column(String, nullable=True)
     organization = Column(String, nullable=True)
-    
-    # Criteria & Notes
-    round_1_type = Column(String, nullable=True)
     round_1_criteria = Column(String, nullable=True)
-    extra_rounds = Column(String, nullable=True) # General notes for other rounds
+    extra_rounds = Column(String, nullable=True)
     final_round = Column(String, nullable=True)
     
-    # Storage
     checklist = Column(JSON, default=dict)
     extra_data = Column(JSON, default=dict)
     

@@ -13,6 +13,7 @@ import {
   Search,
   Filter
 } from 'lucide-react';
+import { useToast } from './ui/toast';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -33,6 +34,8 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(INITIAL_COLUMNS);
 
+  const { toast } = useToast();
+
   useEffect(() => {
     loadHackathons();
   }, []);
@@ -41,8 +44,8 @@ const Dashboard = () => {
     try {
       const data = await api.getHackathons();
       setHackathons(data);
-    } catch (err) {
-      console.error("Failed to load:", err);
+    } catch (err: any) {
+      toast('error', 'Failed to load hackathons', err.response?.data?.detail || err.message);
     } finally {
       setLoading(false);
     }
@@ -51,21 +54,24 @@ const Dashboard = () => {
   const handleSave = async (data: HackathonData) => {
     try {
       await api.saveHackathon(data, data.id);
+      toast('success', data.id ? 'Changes saved' : 'Hackathon added', data.title);
       setShowFormModal(false);
       setEditingData(null);
       loadHackathons();
-    } catch (err) {
-      alert("Error saving hackathon");
+    } catch (err: any) {
+      toast('error', 'Save failed', err.response?.data?.detail || 'Please check all fields and try again.');
     }
   };
 
   const handleDelete = async (id: number) => {
+    // Keep window.confirm for now as a simple blocker, but toast the result
     if (window.confirm("Delete this hackathon?")) {
       try {
         await api.deleteHackathon(id);
+        toast('success', 'Hackathon deleted');
         loadHackathons();
-      } catch (err) {
-        alert("Delete failed");
+      } catch (err: any) {
+        toast('error', 'Delete failed', err.response?.data?.detail || err.message);
       }
     }
   };
@@ -101,7 +107,6 @@ const Dashboard = () => {
              </div>
              <h1 className="text-3xl font-extrabold gradient-text tracking-tight font-sans">HackTrack Pro</h1>
           </div>
-          <p className="text-muted text-sm font-medium uppercase tracking-widest">Command Center • Phase 2</p>
         </div>
 
         <div className="flex items-center gap-3">

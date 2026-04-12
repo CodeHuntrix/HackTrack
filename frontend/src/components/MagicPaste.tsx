@@ -11,6 +11,8 @@ const MagicPaste = ({ onResult }: MagicPasteProps) => {
   const [text, setText] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  const { toast } = useToast();
+
   const handleAnalyze = async () => {
     if (!text.trim()) return;
 
@@ -18,9 +20,10 @@ const MagicPaste = ({ onResult }: MagicPasteProps) => {
     try {
       const data = await api.extractWithAI(text);
       onResult(data);
+      toast('success', 'Extraction complete', 'Please review the details in the form.');
       setText('');
-    } catch (err) {
-      alert("AI Analysis failed. Please try again or enter manually.");
+    } catch (err: any) {
+      toast('error', 'AI extraction failed', err.response?.data?.detail || 'Please try again or enter manually.');
     } finally {
       setIsAnalyzing(false);
     }

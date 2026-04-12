@@ -13,23 +13,25 @@ export interface HackathonData {
   link?: string;
   status?: string;
   
+  // Phase 3 Logistics
+  duration?: string;
+  fees?: string;
+  hackathon_type?: string;
+  is_direct_to_final?: boolean;
+
   // Milestone Dates
   registration_deadline?: string | null;
   round_1_date?: string | null;
   result_date?: string | null;
-  final_submission_date?: string | null;
+  final_round_date?: string | null; // RENAMED
   top_teams_date?: string | null;
   grand_finale_date?: string | null;
   
-  // Legacy
-  submission_deadline?: string | null;
-  
+  // Details
   mode?: string;
   team_size?: string;
-  fee?: string;
   prize_pool?: string;
   organization?: string;
-  round_1_type?: string;
   round_1_criteria?: string;
   extra_rounds?: string;
   final_round?: string;

@@ -13,11 +13,11 @@
   --color-surface-hover: #1e293b;
   --color-muted: #94a3b8;
 
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
-  --radius-2xl: 2rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
 
   --border: #1e293b;
   --input: #1e293b;
@@ -46,7 +46,7 @@
 }
 
 .glass-panel {
-  @apply bg-surface/70 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl;
+  @apply bg-surface/70 backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -61,4 +61,23 @@
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(168, 85, 247, 0.3);
+}
+.form-input-custom {
+  @apply w-full bg-white/5 border border-white/10 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted/50;
+}
+
+.form-select-custom {
+  @apply w-full bg-white/5 border border-white/10 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all appearance-none cursor-pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1rem;
+}
+
+.form-select-custom option {
+  @apply bg-[#1e293b] text-white py-2;
+}
+
+.form-textarea-custom {
+  @apply w-full bg-white/5 border border-white/10 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted/50 resize-y;
 }

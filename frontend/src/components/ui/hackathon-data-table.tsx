@@ -76,6 +76,8 @@ import {
 
 const StatusPicker = ({ current, onSelect }: { current: string, onSelect: (status: string) => Promise<void> }) => {
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const touchStart = React.useRef<{ x: number, y: number } | null>(null);
   
   // Handle 'Selected' legacy data
   const effectiveStatus = current === "Selected" ? "Accepted" : current;
@@ -87,15 +89,43 @@ const StatusPicker = ({ current, onSelect }: { current: string, onSelect: (statu
       await onSelect(status);
     } finally {
       setIsUpdating(false);
+      setIsOpen(false);
     }
   };
 
+  // Prevent accidental opening during swipes/scrolls
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStart.current) return;
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const deltaX = Math.abs(endX - touchStart.current.x);
+    const deltaY = Math.abs(endY - touchStart.current.y);
+
+    // If movement is small, it's a tap. If larger, it's a swipe/scroll.
+    if (deltaX < 10 && deltaY < 10 && !isUpdating) {
+      setIsOpen(!isOpen);
+    }
+    touchStart.current = null;
+  };
+
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild disabled={isUpdating}>
         <button 
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onClick={(e) => {
+            // Only handle mouse clicks here. Touch is handled by the handlers above.
+            if (e.nativeEvent instanceof MouseEvent && !isUpdating) {
+              setIsOpen(!isOpen);
+            }
+          }}
           className={cn(
-            "flex items-center justify-between gap-2 transition-all active:scale-95 px-3 py-1.5 rounded-md border w-[120px] shadow-lg group/btn outline-none ring-offset-background focus:ring-2 focus:ring-primary/50",
+            "flex items-center justify-between gap-2 transition-all active:scale-95 px-3 py-1.5 rounded-md border w-[120px] shadow-lg group/btn outline-none ring-offset-background focus:ring-2 focus:ring-primary/50 touch-manipulation",
             isUpdating ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
             config.color, config.border
           )}

@@ -174,6 +174,7 @@ const Dashboard = () => {
           visibleColumns={visibleColumns}
           onEdit={(h) => { setEditingData(h); setShowFormModal(true); }}
           onDelete={handleDelete}
+          onRefresh={loadHackathons}
         />
       )}
 

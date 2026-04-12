@@ -10,9 +10,20 @@ export interface HackathonData {
   id?: number;
   title: string;
   platform?: string;
-  status: string;
+  link?: string;
+  status?: string;
+  
+  // Milestone Dates
   registration_deadline?: string | null;
+  round_1_date?: string | null;
+  result_date?: string | null;
+  final_submission_date?: string | null;
+  top_teams_date?: string | null;
+  grand_finale_date?: string | null;
+  
+  // Legacy
   submission_deadline?: string | null;
+  
   mode?: string;
   team_size?: string;
   fee?: string;

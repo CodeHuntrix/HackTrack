@@ -96,3 +96,7 @@ def update_settings(settings: schemas.TeamSettingsUpdate, db: Session = Depends(
     db.commit()
     db.refresh(db_settings)
     return db_settings
+
+@app.get("/cron")
+def daily_maintenance():
+    return {"status": "success", "message": "Cron maintenance executed"}

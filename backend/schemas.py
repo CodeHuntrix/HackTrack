@@ -1,12 +1,22 @@
 from pydantic import BaseModel
-from typing import Optional, List, Dict
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 
 class HackathonBase(BaseModel):
-    title: str
+    title: str # Required
     platform: Optional[str] = None
+    link: Optional[str] = None
     status: Optional[str] = "Upcoming"
+    
+    # Milestone Dates
     registration_deadline: Optional[datetime] = None
+    round_1_date: Optional[datetime] = None
+    result_date: Optional[datetime] = None
+    final_submission_date: Optional[datetime] = None
+    top_teams_date: Optional[datetime] = None
+    grand_finale_date: Optional[datetime] = None
+    
+    # Legacy / Other
     submission_deadline: Optional[datetime] = None
     mode: Optional[str] = None
     team_size: Optional[str] = None
@@ -17,30 +27,16 @@ class HackathonBase(BaseModel):
     round_1_criteria: Optional[str] = None
     extra_rounds: Optional[str] = None
     final_round: Optional[str] = None
-    checklist: Dict[str, bool] = {}
-    extra_data: Dict = {}
+    
+    checklist: Optional[Dict[str, bool]] = {}
+    extra_data: Optional[Dict[str, Any]] = {}
 
 class HackathonCreate(HackathonBase):
     pass
 
-class HackathonUpdate(BaseModel):
+class HackathonUpdate(HackathonBase):
     title: Optional[str] = None
-    platform: Optional[str] = None
-    status: Optional[str] = None
-    registration_deadline: Optional[datetime] = None
-    submission_deadline: Optional[datetime] = None
-    mode: Optional[str] = None
-    team_size: Optional[str] = None
-    fee: Optional[str] = None
-    prize_pool: Optional[str] = None
-    organization: Optional[str] = None
-    round_1_type: Optional[str] = None
-    round_1_criteria: Optional[str] = None
-    extra_rounds: Optional[str] = None
-    final_round: Optional[str] = None
-    checklist: Optional[Dict[str, bool]] = None
-    extra_data: Optional[Dict] = None
-    
+
 class Hackathon(HackathonBase):
     id: int
     created_at: datetime

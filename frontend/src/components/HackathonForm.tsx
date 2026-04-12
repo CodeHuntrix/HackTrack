@@ -39,10 +39,11 @@ const HackathonForm = ({ initialData, onSave, onCancel }: HackathonFormProps) =>
   });
 
   // Helper to clean ISO strings for <input type="datetime-local">
-  const formatForInput = (dateStr: string | null | undefined) => {
-    if (!dateStr) return '';
-    if (dateStr.length === 10) return `${dateStr}T00:00`;
-    return dateStr.slice(0, 16);
+  const formatForInput = (dateStr: any) => {
+    if (!dateStr || dateStr === 'null' || dateStr === 'undefined') return '';
+    const str = String(dateStr);
+    if (str.length === 10) return `${str}T00:00`;
+    return str.slice(0, 16);
   };
 
   useEffect(() => {
@@ -86,7 +87,10 @@ const HackathonForm = ({ initialData, onSave, onCancel }: HackathonFormProps) =>
       'registration_deadline', 'round_1_date', 'result_date', 'final_round_date'
     ];
     dateFields.forEach(field => {
-      if (!(cleanData as any)[field]) (cleanData as any)[field] = null;
+      const val = (cleanData as any)[field];
+      if (!val || val === '' || val === 'null') {
+        (cleanData as any)[field] = null;
+      }
     });
     onSave(cleanData);
   };

@@ -275,7 +275,7 @@ export const HackathonDataTable = ({
                   <TableCell className="py-4 border-b border-white/5">
                     <div className="flex items-center gap-1.5">
                       <Users className="h-4 w-4 text-secondary/80" />
-                      <span className="text-[14px] font-black uppercase tracking-tighter text-white/90"> {h.team_size || "1-4"}</span>
+                      <span className="text-[10px] font-black uppercase tracking-tighter text-white/90"> {h.team_size || "1-4"}</span>
                     </div>
                   </TableCell>
 

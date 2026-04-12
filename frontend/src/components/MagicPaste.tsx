@@ -24,7 +24,9 @@ const MagicPaste = ({ onResult }: MagicPasteProps) => {
       toast('success', 'Extraction complete', 'Please review the details in the form.');
       setText('');
     } catch (err: any) {
-      toast('error', 'AI extraction failed', err.response?.data?.detail || 'Please try again or enter manually.');
+      const errorDetail = err.response?.data?.detail;
+      const errorMessage = typeof errorDetail === 'string' ? errorDetail : (err.message || 'AI processing failed');
+      toast('error', 'AI extraction failed', errorMessage);
     } finally {
       setIsAnalyzing(false);
     }

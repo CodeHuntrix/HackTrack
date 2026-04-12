@@ -46,7 +46,9 @@ const Dashboard = () => {
       const data = await api.getHackathons();
       setHackathons(data);
     } catch (err: any) {
-      toast('error', 'Failed to load hackathons', err.response?.data?.detail || err.message);
+      const errorDetail = err.response?.data?.detail;
+      const errorMessage = typeof errorDetail === 'string' ? errorDetail : (err.message || 'Check your connection');
+      toast('error', 'Failed to load hackathons', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -60,7 +62,18 @@ const Dashboard = () => {
       setEditingData(null);
       loadHackathons();
     } catch (err: any) {
-      toast('error', 'Save failed', err.response?.data?.detail || 'Please check all fields and try again.');
+      const errorDetail = err.response?.data?.detail;
+      let errorMessage = 'Please check all fields and try again.';
+      
+      if (typeof errorDetail === 'string') {
+        errorMessage = errorDetail;
+      } else if (Array.isArray(errorDetail)) {
+        errorMessage = errorDetail.map((e: any) => `${e.loc.join('.')}: ${e.msg}`).join(', ');
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      toast('error', 'Save failed', errorMessage);
     }
   };
 
@@ -72,7 +85,9 @@ const Dashboard = () => {
         toast('success', 'Hackathon deleted');
         loadHackathons();
       } catch (err: any) {
-        toast('error', 'Delete failed', err.response?.data?.detail || err.message);
+        const errorDetail = err.response?.data?.detail;
+        const errorMessage = typeof errorDetail === 'string' ? errorDetail : (err.message || 'Check your connection');
+        toast('error', 'Delete failed', errorMessage);
       }
     }
   };

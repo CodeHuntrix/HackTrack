@@ -32,6 +32,7 @@ const Dashboard = () => {
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingData, setEditingData] = useState<HackathonData | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(INITIAL_COLUMNS);
 
   const { toast } = useToast();
@@ -82,13 +83,34 @@ const Dashboard = () => {
     setShowFormModal(true);
   };
 
+  const STATUS_PRIORITY: Record<string, number> = {
+    "Live": 1,
+    "Upcoming": 2,
+    "Accepted": 3,
+    "Submitted": 4,
+    "Rejected": 5,
+    "Ended": 6
+  };
+
   const filteredHackathons = useMemo(() => {
-    return hackathons.filter(h => 
-      (h.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      h.platform?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      h.organization?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [hackathons, searchQuery]);
+    return hackathons
+      .filter(h => {
+        const matchesSearch = (h.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            h.platform?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            h.organization?.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        // Handle renamed term in filter
+        const currentStatus = h.status === "Selected" ? "Accepted" : h.status;
+        const matchesStatus = statusFilter === "All" || currentStatus === statusFilter;
+        
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => {
+        const pA = STATUS_PRIORITY[a.status === "Selected" ? "Accepted" : (a.status || "Upcoming")] || 99;
+        const pB = STATUS_PRIORITY[b.status === "Selected" ? "Accepted" : (b.status || "Upcoming")] || 99;
+        return pA - pB;
+      });
+  }, [hackathons, searchQuery, statusFilter]);
 
   const toggleColumn = (col: string) => {
     const next = new Set(visibleColumns);
@@ -98,14 +120,14 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="w-[95vw] mx-auto py-8 px-4">
+    <div className="w-[98vw] max-w-[1800px] mx-auto min-h-[92vh] flex flex-col py-8 px-4">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-12">
         <div className="space-y-1">
-          <div className="flex items-center gap-3">
-             <div className="bg-primary/20 p-2 rounded-lg">
-                <LayoutDashboard className="h-6 w-6 text-primary" />
+          <div className="flex items-center gap-4">
+             <div className="bg-primary/10 p-1.5 rounded-xl border border-primary/20 shadow-[0_0_20px_rgba(168,85,247,0.2)]">
+                <img src="/logo.png" alt="HackTrack Pro Logo" className="h-10 w-10 object-contain brightness-110 contrast-125" />
              </div>
-             <h1 className="text-3xl font-extrabold gradient-text tracking-tight font-sans">HackTrack Pro</h1>
+             <h1 className="text-3xl font-extrabold gradient-text tracking-tighter font-title uppercase">HackTrack Pro</h1>
           </div>
         </div>
 
@@ -133,15 +155,41 @@ const Dashboard = () => {
         </div>
 
         <div className="flex items-center gap-2">
+            {/* STATUS FILTER */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-muted text-[10px] uppercase font-bold tracking-widest">
+                <Button variant="ghost" size="sm" className="text-muted text-[10px] uppercase font-bold tracking-widest hover:text-white transition-colors">
                   <Filter className="h-3 w-3 mr-2" />
+                  Status: {statusFilter}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 glass-panel border-white/5 bg-surface text-foreground">
+                <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {["All", "Upcoming", "Live", "Submitted", "Accepted", "Rejected", "Ended"].map(status => (
+                  <DropdownMenuCheckboxItem
+                    key={status}
+                    checked={statusFilter === status}
+                    onCheckedChange={() => setStatusFilter(status)}
+                  >
+                    {status}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <div className="h-4 w-px bg-white/10 mx-1" />
+
+            {/* COLUMN VISIBLITY */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-muted text-[10px] uppercase font-bold tracking-widest hover:text-white transition-colors">
+                  <LayoutDashboard className="h-3 w-3 mr-2" />
                   Columns
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 glass-panel border-white/5 bg-surface text-foreground">
-                <DropdownMenuLabel>Toggle Visibility</DropdownMenuLabel>
+                <DropdownMenuLabel>View Options</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {[
                   {k: "title", l: "Hackathon"},
@@ -162,26 +210,32 @@ const Dashboard = () => {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            <div className="h-4 w-px bg-white/10 mx-2" />
-            <span className="text-[10px] text-muted uppercase font-bold tracking-widest">
-              {filteredHackathons.length} Active
+
+            <div className="h-4 w-px bg-white/10 mx-1" />
+
+            <span className="text-[10px] text-muted uppercase font-bold tracking-widest px-2">
+              {filteredHackathons.length} Results
             </span>
         </div>
       </div>
 
-      {loading ? (
-        <div className="h-64 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary" />
-        </div>
-      ) : (
-        <HackathonDataTable 
-          hackathons={filteredHackathons}
-          visibleColumns={visibleColumns}
-          onEdit={(h) => { setEditingData(h); setShowFormModal(true); }}
-          onDelete={handleDelete}
-          onRefresh={loadHackathons}
-        />
-      )}
+      <div className="flex-1 flex flex-col min-h-0">
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center glass-panel">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary" />
+          </div>
+        ) : (
+          <div className="flex-1 flex flex-col min-h-[600px]">
+            <HackathonDataTable 
+              hackathons={filteredHackathons}
+              visibleColumns={visibleColumns}
+              onEdit={(h) => { setEditingData(h); setShowFormModal(true); }}
+              onDelete={handleDelete}
+              onRefresh={loadHackathons}
+            />
+          </div>
+        )}
+      </div>
 
       <Modal isOpen={showMagicModal} onClose={() => setShowMagicModal(false)} title="AI Discovery">
         <MagicPaste onResult={handleAIRExtraction} />

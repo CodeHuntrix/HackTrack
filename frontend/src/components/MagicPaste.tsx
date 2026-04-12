@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { api, HackathonData } from '../services/api';
 import { Button } from './ui/button';
 import { Sparkles, Loader2 } from 'lucide-react';
+import { useToast } from './ui/toast';
 
 interface MagicPasteProps {
   onResult: (data: HackathonData) => void;

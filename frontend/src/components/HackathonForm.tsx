@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { HackathonData } from '../services/api';
 import { Button } from './ui/button';
+import { Sparkles, Loader2 } from 'lucide-react';
+import { useToast } from './ui/toast';
 import { Input } from './ui/input';
 import { CustomSelect } from './ui/custom-select';
 import { Calendar, Info, Trophy, Link, Users, Globe, Zap, Wallet, Layers, ArrowRightCircle, MessageSquare, MapPin } from 'lucide-react';
@@ -25,7 +27,7 @@ const HackathonForm = ({ initialData, onSave, onCancel }: HackathonFormProps) =>
     registration_deadline: '',
     round_1_date: '',
     result_date: '',
-    final_round_date: '', // RENAMED
+    final_round_date: '',
     mode: 'Online',
     team_size: '1-4',
     prize_pool: '',
@@ -171,25 +173,25 @@ const HackathonForm = ({ initialData, onSave, onCancel }: HackathonFormProps) =>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
            <div className="space-y-1.5">
               <label className="text-[10px] uppercase font-bold text-muted ml-1">Reg. Deadline</label>
-              <input type="datetime-local" name="registration_deadline" value={formData.registration_deadline} onChange={handleChange} className="form-input-custom" />
+              <input type="datetime-local" name="registration_deadline" value={formData.registration_deadline || ''} onChange={handleChange} className="form-input-custom" />
            </div>
            
            {!formData.is_direct_to_final && (
               <>
                  <div className="space-y-1.5">
                     <label className="text-[10px] uppercase font-bold text-muted ml-1">Round 1 Date</label>
-                    <input type="datetime-local" name="round_1_date" value={formData.round_1_date} onChange={handleChange} className="form-input-custom" />
+                    <input type="datetime-local" name="round_1_date" value={formData.round_1_date || ''} onChange={handleChange} className="form-input-custom" />
                  </div>
                  <div className="space-y-1.5">
                     <label className="text-[10px] uppercase font-bold text-muted ml-1 text-secondary">Result Date</label>
-                    <input type="datetime-local" name="result_date" value={formData.result_date} onChange={handleChange} className="form-input-custom" />
+                    <input type="datetime-local" name="result_date" value={formData.result_date || ''} onChange={handleChange} className="form-input-custom" />
                  </div>
               </>
            )}
 
            <div className="space-y-1.5">
               <label className="text-[10px] uppercase font-bold text-muted ml-1 text-accent font-black">Final Round Date</label>
-              <input type="datetime-local" name="final_round_date" value={formData.final_round_date} onChange={handleChange} className="form-input-custom border-accent/20" />
+              <input type="datetime-local" name="final_round_date" value={formData.final_round_date || ''} onChange={handleChange} className="form-input-custom border-accent/20" />
            </div>
         </div>
       </div>
@@ -228,6 +230,50 @@ const HackathonForm = ({ initialData, onSave, onCancel }: HackathonFormProps) =>
             </label>
             <input name="team_size" value={formData.team_size || ''} onChange={handleChange} className="form-input-custom" placeholder="2-4 members" />
           </div>
+        </div>
+
+        {/* NEW: EXTENDED DETAILS SECTION */}
+        <div className="pt-4 space-y-4">
+           {!formData.is_direct_to_final && (
+              <div className="space-y-1.5">
+                <label className="text-[10px] uppercase font-bold text-muted ml-1 flex items-center gap-1">
+                   <Layers className="h-3 w-3 text-primary" /> Round 1 Criteria
+                </label>
+                <textarea 
+                  name="round_1_criteria" 
+                  value={formData.round_1_criteria || ''} 
+                  onChange={handleChange} 
+                  className="form-textarea-custom min-h-[80px]" 
+                  placeholder="Describe screening requirements, test pattern, etc." 
+                />
+              </div>
+           )}
+
+           <div className="space-y-1.5">
+              <label className="text-[10px] uppercase font-bold text-muted ml-1 flex items-center gap-1">
+                 <MessageSquare className="h-3 w-3 text-secondary" /> Extra Rounds / Notes
+              </label>
+              <textarea 
+                name="extra_rounds" 
+                value={formData.extra_rounds || ''} 
+                onChange={handleChange} 
+                className="form-textarea-custom min-h-[80px]" 
+                placeholder="Details about middle rounds, technical stacks, or special rules." 
+              />
+           </div>
+
+           <div className="space-y-1.5">
+              <label className="text-[10px] uppercase font-bold text-muted ml-1 flex items-center gap-1">
+                 <Trophy className="h-3 w-3 text-accent" /> Final Round Details
+              </label>
+              <textarea 
+                name="final_round" 
+                value={formData.final_round || ''} 
+                onChange={handleChange} 
+                className="form-textarea-custom min-h-[100px]" 
+                placeholder="Specifics about the finale: prototype requirements, judging criteria, etc." 
+              />
+           </div>
         </div>
       </div>
 

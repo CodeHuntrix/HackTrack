@@ -200,7 +200,7 @@ export const HackathonDataTable = ({
                   <TableCell className="py-4 border-b border-white/5">
                     <div className="flex flex-col min-w-[150px] lg:w-[350px]">
                       <div className="flex items-baseline gap-2 flex-wrap">
-                         <span className="font-bold text-white text-base sm:text-xl group-hover:text-primary transition-all duration-300 font-title tracking-tight">
+                         <span className="font-bold text-white text-sm sm:text-lg group-hover:text-primary transition-all duration-300 font-title tracking-tight">
                            {h.title}
                            {h.link && (
                               <a href={h.link} target="_blank" rel="noreferrer" className="inline-block ml-2 text-muted hover:text-white transition-colors">
@@ -221,14 +221,14 @@ export const HackathonDataTable = ({
                   </TableCell>
                   
                   <TableCell className="py-4 border-b border-white/5">
-                    <div className="flex items-center gap-1 sm:gap-2 text-sm sm:text-md font-black text-white">
-                      <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" />
+                    <div className="flex items-center gap-1 sm:gap-2 text-[11px] sm:text-sm font-black text-white">
+                      <Zap className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-yellow-500" />
                       <span>{h.duration ? `${h.duration}H` : "N/A"}</span>
                     </div>
                   </TableCell>
 
                   <TableCell className="py-4 border-b border-white/5 min-w-[220px]">
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[10px] sm:text-xs">
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-3.5 text-[9px] sm:text-[11px]">
                       <div className="flex items-center gap-2 text-muted">
                         <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                         <span className="font-bold">REG:</span> {formatDate(h.registration_deadline)}
@@ -250,8 +250,8 @@ export const HackathonDataTable = ({
 
                   <TableCell className="py-4 border-b border-white/5">
                     <div className="flex items-center gap-1.5">
-                      <Globe className="h-4 w-4 text-secondary/80" />
-                      <span className="text-xs font-black uppercase tracking-tighter text-white/90">{h.mode || "Online"}</span>
+                      <Globe className="h-3.5 w-3.5 text-secondary/80" />
+                      <span className="text-[11px] font-black uppercase tracking-tighter text-white/90">{h.mode || "Online"}</span>
                     </div>
                   </TableCell>
 
@@ -262,11 +262,11 @@ export const HackathonDataTable = ({
                   </TableCell>
 
                   <TableCell className="py-4 border-b border-white/5">
-                    <div className="flex flex-col gap-1 text-[10px] sm:text-xs font-black uppercase tracking-tighter leading-tight">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <Wallet className={cn("h-3.5 w-3.5 shrink-0", h.fees?.toLowerCase().includes("free") ? "text-green-400" : "text-primary/80")} />
-                        <span className={cn("break-words max-w-[100px]", h.fees?.toLowerCase().includes("free") ? "text-green-400" : "text-white/90")}>
-                          {h.fees || "FREE"}
+                    <div className="flex flex-col gap-1 text-[9px] sm:text-[11px] font-black uppercase tracking-tighter leading-tight">
+                      <div className="flex items-center gap-1 min-w-0">
+                        <Wallet className={cn("h-3 w-3 shrink-0", h.fees?.toLowerCase().includes("null") ? "text-green-400" : "text-primary/70")} />
+                        <span className={cn("break-words max-w-[90px]", h.fees?.toLowerCase().includes("null") ? "text-green-400" : "text-white/80")}>
+                          {h.fees?.toLowerCase().includes("null") ? "FREE" : h.fees}
                         </span>
                       </div>
                     </div>
@@ -274,8 +274,8 @@ export const HackathonDataTable = ({
 
                   <TableCell className="py-4 border-b border-white/5">
                     <div className="flex items-center gap-1.5">
-                      <Users className="h-4 w-4 text-secondary" />
-                      <span className="text-sm font-black uppercase tracking-tighter text-white">{h.team_size || "1-4"}</span>
+                      <Users className="h-4 w-4 text-secondary/80" />
+                      <span className="text-[14px] font-black uppercase tracking-tighter text-white/90"> {h.team_size || "1-4"}</span>
                     </div>
                   </TableCell>
 

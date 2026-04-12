@@ -2,9 +2,16 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
+from dotenv import load_dotenv
+import os
 
-from . import models, schemas, database
-from .services import groq_service
+# Load environment variables from .env
+load_dotenv()
+
+import models
+import schemas
+import database
+from services import groq_service
 
 # Create tables
 models.Base.metadata.create_all(bind=database.engine)

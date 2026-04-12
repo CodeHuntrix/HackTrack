@@ -11,8 +11,12 @@ class HackathonBase(BaseModel):
     mode: Optional[str] = None
     team_size: Optional[str] = None
     fee: Optional[str] = None
+    prize_pool: Optional[str] = None
+    organization: Optional[str] = None
     round_1_type: Optional[str] = None
     round_1_criteria: Optional[str] = None
+    extra_rounds: Optional[str] = None
+    final_round: Optional[str] = None
     checklist: Dict[str, bool] = {}
     extra_data: Dict = {}
 
@@ -28,11 +32,15 @@ class HackathonUpdate(BaseModel):
     mode: Optional[str] = None
     team_size: Optional[str] = None
     fee: Optional[str] = None
+    prize_pool: Optional[str] = None
+    organization: Optional[str] = None
     round_1_type: Optional[str] = None
     round_1_criteria: Optional[str] = None
+    extra_rounds: Optional[str] = None
+    final_round: Optional[str] = None
     checklist: Optional[Dict[str, bool]] = None
     extra_data: Optional[Dict] = None
-
+    
 class Hackathon(HackathonBase):
     id: int
     created_at: datetime

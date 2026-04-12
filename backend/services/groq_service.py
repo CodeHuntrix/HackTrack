@@ -21,8 +21,12 @@ Return ONLY a valid JSON object with the following schema:
   "mode": "Online | Offline | Hybrid",
   "team_size": "Min-Max range",
   "fee": "Free or amount with currency",
+  "prize_pool": "Brief prize summary or amount",
+  "organization": "College, Company, or Host Name",
   "round_1_type": "PPT | Code | Quiz | Video | Idea",
   "round_1_criteria": "Detail about what is required for Round 1",
+  "extra_rounds": "Details for any intermediate rounds (Round 2, 3...)",
+  "final_round": "Details for the final round/presentation",
   "extra_data": {
     "venue": "Specific hall or address",
     "prizes": "Brief prize summary",

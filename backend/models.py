@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, JSON
-from .database import Base
+from database import Base
 import datetime
 
 class Hackathon(Base):
@@ -20,10 +20,14 @@ class Hackathon(Base):
     mode = Column(String) # Online, Offline, Hybrid
     team_size = Column(String)
     fee = Column(String)
+    prize_pool = Column(String)
+    organization = Column(String)
     
     # Round Info
     round_1_type = Column(String)
     round_1_criteria = Column(String)
+    extra_rounds = Column(String) # Details for Round 2, 3, etc.
+    final_round = Column(String)
     
     # Checklist (Stored as JSON)
     # e.g., {"PPT": true, "Video": false, "Code": false}

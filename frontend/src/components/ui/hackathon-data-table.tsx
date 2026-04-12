@@ -77,7 +77,7 @@ import {
 const StatusPicker = ({ current, onSelect }: { current: string, onSelect: (status: string) => Promise<void> }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const touchStart = React.useRef<{ x: number, y: number } | null>(null);
+  const touchStart = React.useRef<{ x: number, y: number, time: number } | null>(null);
   
   // Handle 'Selected' legacy data
   const effectiveStatus = current === "Selected" ? "Accepted" : current;

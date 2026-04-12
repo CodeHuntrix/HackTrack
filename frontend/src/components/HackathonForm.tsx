@@ -33,17 +33,24 @@ const HackathonForm = ({ initialData, onSave, onCancel, title }: HackathonFormPr
     checklist: {},
   });
 
+  // Helper to clean ISO strings for <input type="datetime-local">
+  const formatForInput = (dateStr: string | null | undefined) => {
+    if (!dateStr) return '';
+    // Extract YYYY-MM-DDTHH:mm by taking first 16 characters
+    return dateStr.slice(0, 16);
+  };
+
   useEffect(() => {
     if (initialData) {
       setFormData({
         ...formData,
         ...initialData,
-        registration_deadline: initialData.registration_deadline?.split('Z')[0] || '',
-        round_1_date: initialData.round_1_date?.split('Z')[0] || '',
-        result_date: initialData.result_date?.split('Z')[0] || '',
-        final_submission_date: initialData.final_submission_date?.split('Z')[0] || '',
-        top_teams_date: initialData.top_teams_date?.split('Z')[0] || '',
-        grand_finale_date: initialData.grand_finale_date?.split('Z')[0] || '',
+        registration_deadline: formatForInput(initialData.registration_deadline),
+        round_1_date: formatForInput(initialData.round_1_date),
+        result_date: formatForInput(initialData.result_date),
+        final_submission_date: formatForInput(initialData.final_submission_date),
+        top_teams_date: formatForInput(initialData.top_teams_date),
+        grand_finale_date: formatForInput(initialData.grand_finale_date),
       });
     }
   }, [initialData]);
@@ -55,7 +62,21 @@ const HackathonForm = ({ initialData, onSave, onCancel, title }: HackathonFormPr
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    
+    // Clean data: Convert empty strings to null for optional dates
+    const cleanData = { ...formData };
+    const dateFields = [
+      'registration_deadline', 'round_1_date', 'result_date', 
+      'final_submission_date', 'top_teams_date', 'grand_finale_date'
+    ];
+    
+    dateFields.forEach(field => {
+      if (!(cleanData as any)[field]) {
+        (cleanData as any)[field] = null;
+      }
+    });
+
+    onSave(cleanData);
   };
 
   return (

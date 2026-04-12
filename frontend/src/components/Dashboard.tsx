@@ -11,7 +11,8 @@ import {
   Sparkles, 
   LayoutDashboard, 
   Search,
-  Filter
+  Filter,
+  Loader2
 } from 'lucide-react';
 import { useToast } from './ui/toast';
 import {
@@ -22,7 +23,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { AppSidebar } from './AppSidebar';
 import { useSafeTap } from '@/hooks/useSafeTap';
 
 const INITIAL_COLUMNS = ["title", "deadline", "organization", "prize", "team", "status", "team_members"];

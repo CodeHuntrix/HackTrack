@@ -76,7 +76,6 @@ const HackathonForm = ({ initialData, onSave, onCancel, isSaving }: HackathonFor
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSaving(true);
     try {
       const cleanData = { ...formData };
       

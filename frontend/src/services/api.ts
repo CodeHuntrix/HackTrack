@@ -8,7 +8,7 @@ const client = axios.create({
 
 export interface HackathonData {
   id?: number;
-  title: string;
+  title?: string;
   platform?: string;
   link?: string;
   status?: string;

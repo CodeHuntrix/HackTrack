@@ -22,7 +22,7 @@ interface Contributor {
 
 export interface Hackathon {
   id?: number;
-  title: string;
+  title?: string;
   platform?: string;
   link?: string;
   status?: string;

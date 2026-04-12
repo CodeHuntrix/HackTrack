@@ -78,7 +78,7 @@ const Dashboard = () => {
 
   const filteredHackathons = useMemo(() => {
     return hackathons.filter(h => 
-      h.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (h.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       h.platform?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       h.organization?.toLowerCase().includes(searchQuery.toLowerCase())
     );

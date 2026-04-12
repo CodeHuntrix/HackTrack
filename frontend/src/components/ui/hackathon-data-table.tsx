@@ -95,18 +95,24 @@ const StatusPicker = ({ current, onSelect }: { current: string, onSelect: (statu
 
   // Prevent accidental opening during swipes/scrolls
   const handleTouchStart = (e: React.TouchEvent) => {
-    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    touchStart.current = { 
+      x: e.touches[0].clientX, 
+      y: e.touches[0].clientY,
+      time: Date.now()
+    };
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (!touchStart.current) return;
     const endX = e.changedTouches[0].clientX;
     const endY = e.changedTouches[0].clientY;
+    const deltaTime = Date.now() - touchStart.current.time;
     const deltaX = Math.abs(endX - touchStart.current.x);
     const deltaY = Math.abs(endY - touchStart.current.y);
 
-    // If movement is small, it's a tap. If larger, it's a swipe/scroll.
-    if (deltaX < 10 && deltaY < 10 && !isUpdating) {
+    // Stricter check: movement < 10px AND duration < 300ms (standard tap)
+    if (deltaX < 10 && deltaY < 10 && deltaTime < 300 && !isUpdating) {
+      e.preventDefault(); // Stop ghost click
       setIsOpen(!isOpen);
     }
     touchStart.current = null;
@@ -118,8 +124,12 @@ const StatusPicker = ({ current, onSelect }: { current: string, onSelect: (statu
         <button 
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
+          onPointerDown={(e) => {
+            // Block Radix's default pointerdown behavior on touch to prevent immediate opening
+            if (e.pointerType === 'touch') e.preventDefault();
+          }}
           onClick={(e) => {
-            // Only handle mouse clicks here. Touch is handled by the handlers above.
+            // Only handle real mouse clicks here
             if (e.nativeEvent instanceof MouseEvent && !isUpdating) {
               setIsOpen(!isOpen);
             }

@@ -7,9 +7,10 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  footer?: React.ReactNode;
 }
 
-const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
+  const Modal = ({ isOpen, onClose, title, children, footer }: ModalProps) => {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -36,7 +37,7 @@ const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             className="relative w-full max-w-2xl glass-panel shadow-2xl p-6 overflow-hidden max-h-[90vh] flex flex-col"
           >
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex-none flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold gradient-text">{title}</h2>
               <button
                 onClick={onClose}
@@ -45,9 +46,16 @@ const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
                 <X className="h-6 w-6" />
               </button>
             </div>
+
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
               {children}
             </div>
+
+            {footer && (
+              <div className="flex-none pt-4 mt-2 border-t border-white/5">
+                {footer}
+              </div>
+            )}
           </motion.div>
         </div>
       )}

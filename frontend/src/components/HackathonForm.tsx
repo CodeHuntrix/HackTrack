@@ -9,12 +9,13 @@ import { Calendar, Info, Trophy, Link, Users, Globe, Zap, Wallet, Layers, ArrowR
 
 interface HackathonFormProps {
   initialData?: HackathonData | null;
-  onSave: (data: HackathonData) => void;
+  onSave: (data: HackathonData) => Promise<void> | void;
   onCancel: () => void;
+  isSaving?: boolean;
   title?: string;
 }
 
-const HackathonForm = ({ initialData, onSave, onCancel }: HackathonFormProps) => {
+const HackathonForm = ({ initialData, onSave, onCancel, isSaving }: HackathonFormProps) => {
   const [formData, setFormData] = useState<HackathonData>({
     title: '',
     platform: '',
@@ -73,30 +74,35 @@ const HackathonForm = ({ initialData, onSave, onCancel }: HackathonFormProps) =>
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanData = { ...formData };
-    
-    // Clear screening dates if Direct to Final is enabled
-    if (cleanData.is_direct_to_final) {
-      cleanData.round_1_date = null;
-      cleanData.result_date = null;
-    }
-
-    const dateFields = [
-      'registration_deadline', 'round_1_date', 'result_date', 'final_round_date'
-    ];
-    dateFields.forEach(field => {
-      const val = (cleanData as any)[field];
-      if (!val || val === '' || val === 'null') {
-        (cleanData as any)[field] = null;
+    setIsSaving(true);
+    try {
+      const cleanData = { ...formData };
+      
+      // Clear screening dates if Direct to Final is enabled
+      if (cleanData.is_direct_to_final) {
+        cleanData.round_1_date = null;
+        cleanData.result_date = null;
       }
-    });
-    onSave(cleanData);
+
+      const dateFields = [
+        'registration_deadline', 'round_1_date', 'result_date', 'final_round_date'
+      ];
+      dateFields.forEach(field => {
+        const val = (cleanData as any)[field];
+        if (!val || val === '' || val === 'null') {
+          (cleanData as any)[field] = null;
+        }
+      });
+      await onSave(cleanData);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-4">
+    <form id="hackathon-form" onSubmit={handleSubmit} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-4">
       {/* SECTION 1: CORE IDENTITY */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 border-l-2 border-primary pl-3">
@@ -281,10 +287,6 @@ const HackathonForm = ({ initialData, onSave, onCancel }: HackathonFormProps) =>
         </div>
       </div>
 
-      <div className="flex justify-end gap-3 pt-6 border-t border-white/5 mt-4">
-        <Button type="button" variant="outline" onClick={onCancel} className="h-11 px-8 rounded-xl">Cancel</Button>
-        <Button type="submit" className="bg-primary hover:bg-primary/90 h-11 px-12 rounded-xl font-bold text-white shadow-[0_4px_20px_rgba(168,85,247,0.3)]">Save Hackathon</Button>
-      </div>
     </form>
   );
 };

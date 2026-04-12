@@ -22,18 +22,33 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { AppSidebar } from './AppSidebar';
+import { useSafeTap } from '@/hooks/useSafeTap';
 
-const INITIAL_COLUMNS = new Set(["title", "deadline", "prize", "team", "status", "team_members"]);
+const INITIAL_COLUMNS = ["title", "deadline", "organization", "prize", "team", "status", "team_members"];
 
 const Dashboard = () => {
   const [hackathons, setHackathons] = useState<HackathonData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
   const [showMagicModal, setShowMagicModal] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingData, setEditingData] = useState<HackathonData | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(INITIAL_COLUMNS);
+  
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [isColumnOpen, setIsColumnOpen] = useState(false);
+
+  const { touchProps: statusTouchProps } = useSafeTap({
+    onTap: () => setIsStatusOpen(!isStatusOpen)
+  });
+
+  const { touchProps: columnTouchProps } = useSafeTap({
+    onTap: () => setIsColumnOpen(!isColumnOpen)
+  });
+  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set(INITIAL_COLUMNS));
 
   const { toast } = useToast();
 
@@ -55,6 +70,7 @@ const Dashboard = () => {
   };
 
   const handleSave = async (data: HackathonData) => {
+    setIsSaving(true);
     try {
       await api.saveHackathon(data, data.id);
       toast('success', data.id ? 'Changes saved' : 'Hackathon added', data.title);
@@ -74,6 +90,8 @@ const Dashboard = () => {
       }
 
       toast('error', 'Save failed', errorMessage);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -135,8 +153,9 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="w-[98vw] max-w-[1800px] mx-auto min-h-[92vh] flex flex-col py-8 px-4">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-12">
+    <div className="h-screen w-screen max-w-[1800px] mx-auto flex flex-col p-4 md:p-8 overflow-hidden">
+      {/* HEADER SECTION - FIXED */}
+      <div className="flex-none flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8 mt-4">
         <div className="space-y-1">
           <div className="flex items-center gap-4">
              <div className="bg-primary/10 p-1.5 rounded-xl border border-primary/20 shadow-[0_0_20px_rgba(168,85,247,0.2)]">
@@ -158,7 +177,8 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 glass-panel p-3">
+      {/* TOOLBAR SECTION - FIXED */}
+      <div className="flex-none flex flex-col md:flex-row items-center justify-between gap-4 mb-6 glass-panel p-3">
         <div className="relative w-full md:w-96">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
           <Input 
@@ -171,9 +191,14 @@ const Dashboard = () => {
 
         <div className="flex items-center gap-2">
             {/* STATUS FILTER */}
-            <DropdownMenu>
+            <DropdownMenu open={isStatusOpen} onOpenChange={setIsStatusOpen}>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-muted text-[10px] uppercase font-bold tracking-widest hover:text-white transition-colors">
+                <Button 
+                  {...statusTouchProps}
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-muted text-[10px] uppercase font-bold tracking-widest hover:text-white transition-colors touch-manipulation"
+                >
                   <Filter className="h-3 w-3 mr-2" />
                   Status: {statusFilter}
                 </Button>
@@ -196,9 +221,14 @@ const Dashboard = () => {
             <div className="h-4 w-px bg-white/10 mx-1" />
 
             {/* COLUMN VISIBLITY */}
-            <DropdownMenu>
+            <DropdownMenu open={isColumnOpen} onOpenChange={setIsColumnOpen}>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-muted text-[10px] uppercase font-bold tracking-widest hover:text-white transition-colors">
+                <Button 
+                  {...columnTouchProps}
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-muted text-[10px] uppercase font-bold tracking-widest hover:text-white transition-colors touch-manipulation"
+                >
                   <LayoutDashboard className="h-3 w-3 mr-2" />
                   Columns
                 </Button>
@@ -234,13 +264,14 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col min-h-0">
+      {/* SCROLLABLE DATA SECTION */}
+      <div className="flex-1 overflow-hidden flex flex-col min-h-0 bg-surface/20 rounded-2xl border border-white/5 backdrop-blur-sm">
         {loading ? (
-          <div className="flex-1 flex items-center justify-center glass-panel">
+          <div className="flex-1 flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary" />
           </div>
         ) : (
-          <div className="flex-1 flex flex-col min-h-[600px]">
+          <div className="flex-1 overflow-auto custom-scrollbar">
             <HackathonDataTable 
               hackathons={filteredHackathons}
               visibleColumns={visibleColumns}
@@ -252,19 +283,79 @@ const Dashboard = () => {
         )}
       </div>
 
-      <Modal isOpen={showMagicModal} onClose={() => setShowMagicModal(false)} title="AI Discovery">
-        <MagicPaste onResult={handleAIRExtraction} />
+
+      <Modal 
+        isOpen={showMagicModal} 
+        onClose={() => setShowMagicModal(false)} 
+        title="AI Discovery"
+        footer={
+          <Button 
+            form="magic-paste-form"
+            type="submit"
+            disabled={isExtracting}
+            className="w-full bg-primary hover:bg-primary/90 h-11 rounded-xl font-bold text-white transition-all active:scale-95 disabled:opacity-70"
+          >
+            {isExtracting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Groq is Thinking...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Extract with AI
+              </>
+            )}
+          </Button>
+        }
+      >
+        <MagicPaste 
+          onResult={(data) => {
+             setIsExtracting(false);
+             handleAIRExtraction(data);
+          }} 
+          isAnalyzing={isExtracting}
+        />
       </Modal>
 
       <Modal
         isOpen={showFormModal}
         onClose={() => { setShowFormModal(false); setEditingData(null); }}
         title={editingData?.id ? "Edit Hackathon" : (editingData ? "Review AI Find" : "Manual Entry")}
+        footer={
+          <div className="flex justify-end gap-3">
+             <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => { setShowFormModal(false); setEditingData(null); }} 
+                className="h-11 px-8 rounded-xl"
+                disabled={isSaving}
+             >
+                Cancel
+             </Button>
+             <Button 
+                form="hackathon-form"
+                type="submit"
+                disabled={isSaving}
+                className="bg-primary hover:bg-primary/90 h-11 px-12 rounded-xl font-bold text-white shadow-[0_4px_20px_rgba(168,85,247,0.3)] transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+             >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Hackathon'
+                )}
+             </Button>
+          </div>
+        }
       >
         <HackathonForm 
           initialData={editingData}
           onSave={handleSave}
           onCancel={() => { setShowFormModal(false); setEditingData(null); }}
+          isSaving={isSaving}
         />
       </Modal>
     </div>

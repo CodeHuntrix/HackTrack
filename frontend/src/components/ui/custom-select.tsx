@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSafeTap } from '@/hooks/useSafeTap';
 
 interface SelectProps {
   value: string;
@@ -10,10 +11,13 @@ interface SelectProps {
   className?: string;
   icon?: React.ReactNode;
 }
-
 export const CustomSelect = ({ value, onChange, options, icon, className }: SelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const { touchProps } = useSafeTap({
+    onTap: () => setIsOpen(!isOpen)
+  });
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -28,8 +32,8 @@ export const CustomSelect = ({ value, onChange, options, icon, className }: Sele
   return (
     <div className={cn("relative w-full", className)} ref={containerRef}>
       <div 
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full bg-white/5 border border-white/10 rounded-md px-4 py-2 text-white cursor-pointer hover:bg-white/10 transition-all"
+        {...touchProps}
+        className="flex items-center justify-between w-full bg-white/5 border border-white/10 rounded-md px-4 py-2 text-white cursor-pointer hover:bg-white/10 transition-all touch-manipulation"
       >
         <div className="flex items-center gap-2 truncate">
           {icon}

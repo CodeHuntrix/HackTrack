@@ -6,18 +6,18 @@ import { useToast } from './ui/toast';
 
 interface MagicPasteProps {
   onResult: (data: HackathonData) => void;
+  isAnalyzing?: boolean;
 }
 
-const MagicPaste = ({ onResult }: MagicPasteProps) => {
+const MagicPaste = ({ onResult, isAnalyzing }: MagicPasteProps) => {
   const [text, setText] = useState('');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const { toast } = useToast();
 
   const handleAnalyze = async () => {
+    // This will be called via form submission from the Modal footer
     if (!text.trim()) return;
 
-    setIsAnalyzing(true);
     try {
       const data = await api.extractWithAI(text);
       onResult(data);
@@ -27,8 +27,6 @@ const MagicPaste = ({ onResult }: MagicPasteProps) => {
       const errorDetail = err.response?.data?.detail;
       const errorMessage = typeof errorDetail === 'string' ? errorDetail : (err.message || 'AI processing failed');
       toast('error', 'AI extraction failed', errorMessage);
-    } finally {
-      setIsAnalyzing(false);
     }
   };
 
@@ -40,7 +38,11 @@ const MagicPaste = ({ onResult }: MagicPasteProps) => {
       </div>
       <p className="text-sm text-muted">Copy-paste any hackathon page text here. AI will extract dates, rounds, and prize pools automatically.</p>
       
-      <div className="relative group">
+      <form 
+        id="magic-paste-form" 
+        onSubmit={(e) => { e.preventDefault(); handleAnalyze(); }}
+        className="relative group"
+      >
         <textarea
           className="w-full h-48 bg-surface/50 border border-white/10 rounded-xl p-4 text-sm font-mono focus:ring-2 focus:ring-primary outline-none transition-all resize-none group-hover:border-primary/30"
           placeholder="Paste Code Carnival, Unstop or Devfolio text here..."
@@ -48,22 +50,7 @@ const MagicPaste = ({ onResult }: MagicPasteProps) => {
           onChange={(e) => setText(e.target.value)}
         />
         <div className="absolute inset-0 rounded-xl pointer-events-none group-hover:shadow-[0_0_20px_rgba(168,85,247,0.1)] transition-all" />
-      </div>
-
-      <Button 
-        onClick={handleAnalyze} 
-        disabled={isAnalyzing || !text.trim()}
-        className="w-full"
-      >
-        {isAnalyzing ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Groq is Thinking...
-          </>
-        ) : (
-          "Extract with AI"
-        )}
-      </Button>
+      </form>
     </div>
   );
 };

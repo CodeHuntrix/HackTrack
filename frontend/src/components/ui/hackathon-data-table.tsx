@@ -74,10 +74,11 @@ import {
   DropdownMenuTrigger,
 } from "./dropdown-menu";
 
+import { useSafeTap } from '@/hooks/useSafeTap';
+
 const StatusPicker = ({ current, onSelect }: { current: string, onSelect: (status: string) => Promise<void> }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const touchStart = React.useRef<{ x: number, y: number, time: number } | null>(null);
   
   // Handle 'Selected' legacy data
   const effectiveStatus = current === "Selected" ? "Accepted" : current;
@@ -93,47 +94,16 @@ const StatusPicker = ({ current, onSelect }: { current: string, onSelect: (statu
     }
   };
 
-  // Prevent accidental opening during swipes/scrolls
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStart.current = { 
-      x: e.touches[0].clientX, 
-      y: e.touches[0].clientY,
-      time: Date.now()
-    };
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!touchStart.current) return;
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-    const deltaTime = Date.now() - touchStart.current.time;
-    const deltaX = Math.abs(endX - touchStart.current.x);
-    const deltaY = Math.abs(endY - touchStart.current.y);
-
-    // Stricter check: movement < 10px AND duration < 300ms (standard tap)
-    if (deltaX < 10 && deltaY < 10 && deltaTime < 300 && !isUpdating) {
-      e.preventDefault(); // Stop ghost click
-      setIsOpen(!isOpen);
-    }
-    touchStart.current = null;
-  };
+  const { touchProps } = useSafeTap({
+    onTap: () => setIsOpen(!isOpen),
+    disabled: isUpdating
+  });
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild disabled={isUpdating}>
         <button 
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          onPointerDown={(e) => {
-            // Block Radix's default pointerdown behavior on touch to prevent immediate opening
-            if (e.pointerType === 'touch') e.preventDefault();
-          }}
-          onClick={(e) => {
-            // Only handle real mouse clicks here
-            if (e.nativeEvent instanceof MouseEvent && !isUpdating) {
-              setIsOpen(!isOpen);
-            }
-          }}
+          {...touchProps}
           className={cn(
             "flex items-center justify-between gap-2 transition-all active:scale-95 px-3 py-1.5 rounded-md border w-[120px] shadow-lg group/btn outline-none ring-offset-background focus:ring-2 focus:ring-primary/50 touch-manipulation",
             isUpdating ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
@@ -209,18 +179,17 @@ export const HackathonDataTable = ({
   ];
 
   return (
-    <div className="glass-panel overflow-visible flex-1 flex flex-col">
-      <div className="relative w-full overflow-visible flex-1">
+    <div className="flex-1 flex flex-col min-w-0">
+      <div className="relative w-full flex-1">
         <Table>
-          <TableHeader className="bg-white/5 border-none">
-            <TableRow className="border-none">
+          <TableHeader className="sticky top-0 z-50 bg-[#07090e] border-b border-white/10 shadow-xl">
+            <TableRow className="border-none hover:bg-transparent">
               <TableHead className="text-muted font-black uppercase text-[10px] sm:text-xs tracking-widest py-5 border-none min-w-[150px] lg:w-[350px]">Hackathon</TableHead>
               <TableHead className="text-muted font-black uppercase text-[10px] sm:text-xs tracking-widest py-5 border-none">Duration</TableHead>
               <TableHead className="text-muted font-black uppercase text-[10px] sm:text-xs tracking-widest py-5 border-none">Timeline</TableHead>
               <TableHead className="text-muted font-black uppercase text-[10px] sm:text-xs tracking-widest py-5 border-none">Mode</TableHead>
               <TableHead className="text-muted font-black uppercase text-[10px] sm:text-xs tracking-widest py-5 border-none">Type</TableHead>
               <TableHead className="text-muted font-black uppercase text-[10px] sm:text-xs tracking-widest py-5 border-none">Fees</TableHead>
-              <TableHead className="text-muted font-black uppercase text-[10px] sm:text-xs tracking-widest py-5 border-none">Team</TableHead>
               <TableHead className="text-muted font-black uppercase text-[10px] sm:text-xs tracking-widest py-5 border-none text-center">Flow</TableHead>
               <TableHead className="text-muted font-black uppercase text-[11px] tracking-widest py-5 border-none text-right">Status</TableHead>
               <TableHead className="text-right py-5 border-none pr-6 w-[120px]">Action</TableHead>
@@ -268,7 +237,7 @@ export const HackathonDataTable = ({
                   </TableCell>
 
                   <TableCell className="py-4 border-b border-white/5 min-w-[220px]">
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-3.5 text-[9px] sm:text-[11px]">
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-3.5 text-[9px] sm:text-[11px]">
                       <div className="flex items-center gap-2 text-muted">
                         <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                         <span className="font-bold">REG:</span> {formatDate(h.registration_deadline)}
@@ -304,20 +273,14 @@ export const HackathonDataTable = ({
                   <TableCell className="py-4 border-b border-white/5">
                     <div className="flex flex-col gap-1 text-[9px] sm:text-[11px] font-black uppercase tracking-tighter leading-tight">
                       <div className="flex items-center gap-1 min-w-0">
-                        <Wallet className={cn("h-3 w-3 shrink-0", h.fees?.toLowerCase().includes("null") ? "text-green-400" : "text-primary/70")} />
-                        <span className={cn("break-words max-w-[90px]", h.fees?.toLowerCase().includes("null") ? "text-green-400" : "text-white/80")}>
-                          {h.fees?.toLowerCase().includes("null") ? "FREE" : h.fees}
+                        <Wallet className={cn("h-3 w-3 shrink-0", h.fees?.toLowerCase().includes("null")|| h.fees?.toLowerCase().includes("free") ? "text-green-400" : "text-primary/70")} />
+                        <span className={cn("break-words max-w-[90px]", h.fees?.toLowerCase().includes("null")|| h.fees?.toLowerCase().includes("free") ? "text-green-400" : "text-white/80")}>
+                          {h.fees?.toLowerCase().includes("null") || h.fees === "0" || h.fees?.toLowerCase().includes("free") ? "FREE" : h.fees}
                         </span>
                       </div>
                     </div>
                   </TableCell>
 
-                  <TableCell className="py-4 border-b border-white/5">
-                    <div className="flex items-center gap-1.5">
-                      <Users className="h-4 w-4 text-secondary/80" />
-                      <span className="text-[10px] font-black uppercase tracking-tighter text-white/90"> {h.team_size || "1-4"}</span>
-                    </div>
-                  </TableCell>
 
                   <TableCell className="py-4 border-b border-white/5 text-center">
                     {h.is_direct_to_final ? (
@@ -326,7 +289,7 @@ export const HackathonDataTable = ({
                           <span className="text-[9px] font-black uppercase tracking-tighter">Direct</span>
                        </div>
                     ) : (
-                       <div className="flex flex-col items-center gap-1 text-muted/30">
+                       <div className="flex flex-col items-center gap-1 text-teal-400/80">
                           <ArrowRightCircle className="h-4.5 w-4.5" />
                           <span className="text-[9px] font-bold uppercase tracking-tighter">Mixed</span>
                        </div>

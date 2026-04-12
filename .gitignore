@@ -1,0 +1,22 @@
+# Web
+node_modules/
+dist/
+build/
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+venv/
+env/
+
+# Environment / Secret
+.env
+.env.local
+
+# Database
+*.db
+*.sqlite3
+
+# OS
+Thumbs.db

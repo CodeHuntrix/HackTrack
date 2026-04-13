@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { Lock, Delete, X, CheckCircle2, ShieldAlert } from 'lucide-react';
 
 interface PinGateProps {
@@ -50,7 +50,7 @@ const PinGate: React.FC<PinGateProps> = ({ onSuccess }) => {
     }
   };
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0, scale: 0.9, y: 20 },
     visible: { 
       opacity: 1, 
@@ -70,14 +70,14 @@ const PinGate: React.FC<PinGateProps> = ({ onSuccess }) => {
     }
   };
 
-  const shakeVariants = {
+  const shakeVariants: Variants = {
     error: {
       x: [-10, 10, -10, 10, 0],
       transition: { duration: 0.4 }
     }
   };
 
-  const digitVariants = {
+  const digitVariants: Variants = {
     empty: { scale: 1, backgroundColor: "rgba(255, 255, 255, 0.1)" },
     filled: { scale: 1.2, backgroundColor: "#a855f7" },
     success: { scale: 1.1, backgroundColor: "#10b981" },

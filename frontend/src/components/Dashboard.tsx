@@ -53,18 +53,32 @@ const Dashboard = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    loadHackathons();
+    // Slight delay on mount to ensure connection stability
+    const timer = setTimeout(() => {
+      loadHackathons();
+    }, 200);
+    return () => clearTimeout(timer);
   }, []);
 
-  const loadHackathons = async () => {
+  const loadHackathons = async (retryCount = 0) => {
+    if (retryCount === 0) setLoading(true);
+    
     try {
       const data = await api.getHackathons();
       setHackathons(data);
+      setLoading(false);
     } catch (err: any) {
+      // Retry up to 3 times for network/connection issues
+      if (retryCount < 3) {
+        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+        console.warn(`Fetch failed, retrying in ${delay}ms... (Attempt ${retryCount + 1}/3)`);
+        setTimeout(() => loadHackathons(retryCount + 1), delay);
+        return;
+      }
+
       const errorDetail = err.response?.data?.detail;
       const errorMessage = typeof errorDetail === 'string' ? errorDetail : (err.message || 'Check your connection');
       toast('error', 'Failed to load hackathons', errorMessage);
-    } finally {
       setLoading(false);
     }
   };

@@ -28,6 +28,7 @@ app.add_middleware(
 )
 
 # --- Hackathon Endpoints ---
+# post, get, delete, put
 
 @app.get("/hackathons", response_model=List[schemas.Hackathon])
 def list_hackathons(db: Session = Depends(database.get_db)):
